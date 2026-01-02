@@ -3,7 +3,7 @@ const { prisma } = require('../db/prisma');
 async function getAllTasks(query) {
   const { page = 1, limit = 10, status, priority } = query;
 
-  const where = {};
+  const where = { userId: req.user.id };
   if (status) where.status = status.toUpperCase().replace('-', '_');
   if (priority) where.priority = priority.toUpperCase();
 
@@ -29,29 +29,40 @@ async function getAllTasks(query) {
 }
 
 async function getTaskById(id) {
-  return prisma.task.findUnique({ where: { id } });
+  return prisma.task.findUnique({ 
+    where: { 
+        id,
+        userId: req.user.id,
+    } });
 }
 
 async function createTask(data) {
   return prisma.task.create({
     data: {
-      title: data.title,
-      description: data.description,
-      ...(data.status && { status: data.status.toUpperCase() }),
-      ...(data.priority && { priority: data.priority.toUpperCase() }),
+    title,
+    description,
+    userId: req.user.id,  // ← Add this
+    ...(status && { status: status.toUpperCase() }),
+    ...(priority && { priority: priority.toUpperCase() }),
     },
   });
 }
 
 async function updateTask(id, data) {
   return prisma.task.update({
-    where: { id },
+    where: { 
+        id,
+        userId: req.user.id,
+    },
     data,
   });
 }
 
 async function deleteTask(id) {
-  return prisma.task.delete({ where: { id } });
+  return prisma.task.delete({ where: { 
+    id,
+    userId: req.user.id
+ } });
 }
 
 module.exports = {
