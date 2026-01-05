@@ -17,16 +17,21 @@ A Node.js and Express REST API with PostgreSQL database using Prisma ORM for man
 - Environment-based configuration using dotenv
 - Request logging middleware
 - Pagination support
+- Rate limiting
 
 ## Prerequisites
 
-- Node.js v18 or higher
-- npm
+- Node.js (v18 or higher)
 - PostgreSQL database
+- npm or yarn
 
-## Setup
+## Installation
 
-1. Clone or download the project
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd jwt-auth-api
+```
 
 2. Install dependencies:
 ```bash
@@ -42,29 +47,24 @@ JWT_SECRET="your-super-secret-jwt-key-here"
 JWT_EXPIRES_IN="7d"
 ```
 
-4. Run Prisma migrations:
+4. Set up the database:
 ```bash
-npx prisma migrate dev
-```
-
-5. Generate Prisma Client:
-```bash
+# Generate Prisma client
 npx prisma generate
-```
 
-6. (Optional) Seed the database:
-```bash
+# Run database migrations
+npx prisma migrate dev
+
+# Seed the database with test data
 npm run seed
 ```
 
-## Running the Server
-
-Start the server:
+5. Start the server:
 ```bash
-node server.js
+npm start
 ```
 
-Server will start at: http://localhost:3000
+The API will be available at `http://localhost:3000`
 
 ## API Endpoints
 
@@ -150,6 +150,18 @@ curl -X POST http://localhost:3000/api/tasks \
   -d '{"title":"Test Task","description":"Testing API"}'
 ```
 
+**Get all tasks:**
+```bash
+curl -X GET http://localhost:3000/api/tasks \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+**Get tasks with pagination and filtering:**
+```bash
+curl -X GET "http://localhost:3000/api/tasks?page=1&limit=5&status=PENDING&priority=HIGH" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
 ## Authentication
 
 - JWT tokens are required for all task operations
@@ -162,9 +174,40 @@ curl -X POST http://localhost:3000/api/tasks \
 - `USER` - Default role, can manage own tasks
 - `ADMIN` - Administrative role (future use)
 
+## Database Schema
+
+### User Model
+- `id` - UUID primary key
+- `email` - Unique email address
+- `password` - Hashed password
+- `name` - Optional user name
+- `role` - User role (USER/ADMIN)
+- `createdAt` - Creation timestamp
+- `updatedAt` - Last update timestamp
+
+### Task Model
+- `id` - UUID primary key
+- `title` - Task title
+- `description` - Optional task description
+- `status` - Task status (PENDING/IN_PROGRESS/COMPLETED)
+- `priority` - Task priority (LOW/MEDIUM/HIGH)
+- `userId` - Foreign key to User
+- `createdAt` - Creation timestamp
+- `updatedAt` - Last update timestamp
+
+## Scripts
+
+- `npm start` - Start the server
+- `npm run seed` - Seed the database with test data
+- `npx prisma studio` - Open Prisma Studio for database management
+- `npx prisma migrate dev` - Run database migrations
+- `npx prisma generate` - Generate Prisma client
+
 ## Notes
 
 - Data is persisted in PostgreSQL database
 - Passwords are hashed using bcrypt
 - All user inputs are validated
 - JWT tokens are used for stateless authentication
+- Users can only access their own tasks (data isolation)
+- API includes comprehensive error handling and logging and rate limiting

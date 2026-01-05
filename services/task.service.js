@@ -1,9 +1,9 @@
 const { prisma } = require('../db/prisma');
 
-async function getAllTasks(query) {
+async function getAllTasks(query, user) {
   const { page = 1, limit = 10, status, priority } = query;
 
-  const where = { userId: req.user.id };
+  const where = { userId: user.id };
   if (status) where.status = status.toUpperCase().replace('-', '_');
   if (priority) where.priority = priority.toUpperCase();
 
@@ -28,40 +28,49 @@ async function getAllTasks(query) {
   };
 }
 
-async function getTaskById(id) {
-  return prisma.task.findUnique({ 
+async function getTaskById(id, user) {
+  return prisma.task.findFirst({ 
     where: { 
         id,
-        userId: req.user.id,
+        userId: user.id,
     } });
 }
 
-async function createTask(data) {
+async function createTask(data, user) {
+  const { title, description, status, priority } = data;
   return prisma.task.create({
     data: {
     title,
     description,
-    userId: req.user.id,  // ← Add this
+    userId: user.id, 
     ...(status && { status: status.toUpperCase() }),
     ...(priority && { priority: priority.toUpperCase() }),
     },
   });
 }
 
-async function updateTask(id, data) {
+async function updateTask(id, data, user) {
+  const task = await getTaskById(id, user);
+  if (!task) {
+    throw { code: 'P2025' }; // Prisma not found error code
+  }
   return prisma.task.update({
     where: { 
         id,
-        userId: req.user.id,
+        userId: user.id,
     },
     data,
   });
 }
 
-async function deleteTask(id) {
+async function deleteTask(id, user) {
+  const task = await getTaskById(id, user);
+  if (!task) {
+    throw { code: 'P2025' }; // Prisma not found error code
+  }
   return prisma.task.delete({ where: { 
     id,
-    userId: req.user.id
+    userId: user.id
  } });
 }
 
