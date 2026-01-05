@@ -1,7 +1,6 @@
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const { validatePassword, validateEmail } = require('../utils/password');
-
+const {generateToken} = require('../utils/jwt');
 const { prisma } = require('../db/prisma');
 
 
@@ -63,11 +62,7 @@ async function register(req, res) {
     });
 
     // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
+   const token = generateToken(user);
 
     res.status(201).json({ 
       message: 'User created successfully',
@@ -116,11 +111,7 @@ async function login(req, res) {
     }
 
     // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
+    const token = generateToken(user);
 
     // Return user without password
     const { password: _, ...userWithoutPassword } = user;
