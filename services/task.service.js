@@ -57,7 +57,6 @@ async function updateTask(id, data, user) {
   return prisma.task.update({
     where: { 
         id,
-        userId: user.id,
     },
     data,
   });
@@ -70,7 +69,6 @@ async function deleteTask(id, user) {
   }
   return prisma.task.delete({ where: { 
     id,
-    userId: user.id
  } });
 }
 
